@@ -55,8 +55,13 @@ def send_sms_notification(user_id: str, message: str) -> dict:
         "message": message,
     }
 
-    response = http.post(MOCK_NOTIFY_URL, json=payload)
-    gateway_data = response.json()
+    try:
+        response = http.post(MOCK_NOTIFY_URL, json=payload, timeout=5)
+        gateway_data = response.json()
+    except http.exceptions.Timeout:
+        raise RuntimeError("Notification service timed out")
+    except http.exceptions.RequestException as exc:
+        raise RuntimeError(f"Notification service unreachable: {exc}")
 
     if response.status_code != 200 or gateway_data.get("status") != "sent":
         raise RuntimeError(

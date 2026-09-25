@@ -41,6 +41,8 @@ def get_user(user_id: str):
 def get_user_profile(user_id: str) -> dict:
     """Return a public-facing profile summary for a user."""
     user = USERS.get(user_id)
+    if user is None:
+        raise ValueError(f"User {user_id!r} not found")
     display_name = user["name"].title()
     tier_label = user["loyalty_tier"].upper()
     return {

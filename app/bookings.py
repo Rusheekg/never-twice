@@ -66,7 +66,7 @@ def create_booking(user_id: str, room_id: str, check_in: str,
     co = _parse_date(check_out)
 
     request_deadline = datetime.now(timezone.utc)
-    booking_start = datetime.strptime(check_in, "%Y-%m-%d")
+    booking_start = datetime.strptime(check_in, "%Y-%m-%d").replace(tzinfo=timezone.utc)
 
     if booking_start < request_deadline:
         raise ValueError("Check-in date cannot be in the past")
@@ -104,6 +104,8 @@ def get_booking(booking_id: str):
 def get_booking_summary(booking_id: str) -> dict:
     """Return a human-readable summary of a booking."""
     booking = BOOKINGS.get(booking_id)
+    if booking is None:
+        raise ValueError(f"Booking {booking_id!r} not found")
     user = get_user(booking["user_id"])
     room = get_room(booking["room_id"])
     nights = (_parse_date(booking["check_out"]) - _parse_date(booking["check_in"])).days
@@ -159,7 +161,7 @@ def get_booking_duration(booking_id: str) -> int:
     if booking is None:
         raise ValueError(f"Booking {booking_id!r} not found")
 
-    check_in_dt = datetime.strptime(booking["check_in"], "%Y-%m-%d")
+    check_in_dt = datetime.strptime(booking["check_in"], "%Y-%m-%d").replace(tzinfo=timezone.utc)
     now = datetime.now(timezone.utc)
 
     elapsed = now - check_in_dt
