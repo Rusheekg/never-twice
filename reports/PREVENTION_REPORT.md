@@ -64,16 +64,15 @@ Postmortems read: 3 (PM-001, PM-002, PM-003)
 |---|---|
 | Postmortems read | 3 |
 | Patterns extracted | 3 |
-| Python files scanned | 8 |
+| Python files scanned | 7 |
 | Functions examined (total) | ~55 |
 | Confirmed bugs found | 7 |
 | Locations checked and ruled out as safe | 21 |
 | Tests written | 13 |
 | Tests failing before fixes | 13 / 13 |
 | Tests passing after fixes | 13 / 13 |
-| Guardrail issues flagged (before fixes) | 64 (7 confirmed + 57 false positives) |
-| Guardrail issues flagged (after fixes) | 57 (0 confirmed + 57 false positives) |
-| Confirmed guardrail issues after fixes | **0** |
+| Guardrail issues on original code (before fixes) | 7, exit code 1 |
+| Guardrail issues after fixes | 0, exit code 0 |
 
 ---
 
@@ -172,3 +171,19 @@ front-desk disruption that triggered the original incident report.
 | `guardrails/check_patterns.py` | AST-based static analyser for all 3 patterns |
 | `guardrails/REVIEW_CHECKLIST.md` | PR review checklist — one section per postmortem |
 | `reports/PREVENTION_REPORT.md` | This document |
+
+---
+
+## Guardrail Correction
+
+The guardrail generated during this run initially flagged **64 issues** on the original code.
+Of these, **57 were false positives**: the analyser mistook dictionary `.get()` calls and other
+non-HTTP methods for HTTP calls without a timeout, producing a large volume of noise that
+required manual filtering to identify the 7 confirmed bugs.
+
+That guardrail was replaced with the validated guardrail from the earlier run. On the original
+code it flags **exactly 7 issues** — one per confirmed bug — and exits with code 1. After the
+fixes are applied it reports **0 issues** and exits with code 0. There are no false positives
+and no manual filtering is required.
+
+The Never Twice mode now includes validation rules that require the guardrail's flagged count to match the confirmed bug count exactly. Before the approval checkpoint, Bob must run the guardrail on the unfixed code and confirm that it flags every confirmed bug, that the count matches exactly, and that it does not flag anything listed as safe or already fixed. If any check fails, Bob must fix the guardrail and rerun it, instead of filtering the results by hand.
