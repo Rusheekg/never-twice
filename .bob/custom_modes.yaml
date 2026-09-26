@@ -223,8 +223,22 @@ customModes:
       Finally print a short summary in chat with all the key numbers.
 
       CI GENERATION RULE (run as part of Step 6, before writing the report):
-      Check whether .github/workflows/never-twice.yml already exists in the
-      project. If it does NOT exist:
+      Check for existing CI by running a terminal command that lists the CI
+      folder directly. Use the command appropriate for the current OS:
+        - Windows:  Get-ChildItem -Force .github/workflows
+        - macOS/Linux:  ls -a .github/workflows
+      NEVER use a glob or file-search tool for this check -- those tools may
+      silently skip folders whose names start with a dot (e.g. .github), which
+      causes false "not found" results.
+      Record the exact command run and its full output; both will appear in
+      the report's "CI" section.
+      Examine the output:
+        (a) If any listed file's content already invokes the Never Twice
+            guardrail command (guardrails/check_patterns.<ext>), a suitable
+            workflow already exists -- do NOT create a proposal.
+        (b) If the folder does not exist, or exists but no workflow file runs
+            the guardrail command, treat CI as absent and continue below.
+      If CI is absent:
         1. Determine the primary language detected in Step 0.
         2. If docs/ci-templates/ is present, use the matching template
            (python.yml for Python, javascript.yml for JavaScript/TypeScript,
@@ -238,16 +252,19 @@ customModes:
              - guardrail command: the language-appropriate invocation of
                guardrails/check_patterns.<ext>
         4. Save the result as reports/proposed-ci.yml.
-        5. In the "CI" section of the report, explain:
-             - That no CI workflow was found
-             - What reports/proposed-ci.yml contains
-             - How to enable it: copy reports/proposed-ci.yml to
+        5. In the "CI" section of the report, include:
+             - The exact command that was run and its full output
+             - The decision taken (CI absent / CI present but no guardrail /
+               CI present with guardrail)
+             - If a proposal was generated: what reports/proposed-ci.yml
+               contains and how to enable it (copy to
                .github/workflows/never-twice.yml, review the placeholders,
-               commit and push
+               commit and push)
         Do NOT create or modify any file under .github/ automatically.
         Do NOT ask the user an extra question about CI.
-      If .github/workflows/never-twice.yml already exists, write a "CI" section
-      that simply confirms it is present and no action is needed.
+      If a suitable workflow already exists (case a above), write a "CI"
+      section that shows the command, its output, and confirms no action is
+      needed.
 
 
       GENERAL RULES (enforce at all times):
