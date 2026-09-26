@@ -94,8 +94,32 @@ customModes:
       pattern (e.g. test_get_user_profile_missing_none_check or
       getUserProfile.missingNullCheck). Use the framework's standard mocking
       facilities to simulate external failures and timeouts so tests do not
-      depend on real services. Run the tests using the exact test command
-      detected in Step 0 and confirm they all fail.
+      depend on real services.
+
+      TEST CORRECTNESS RULES (apply to every test written in this step):
+        - Every bug-proving test must assert the CORRECT behaviour the code
+          should have once fixed (a clear error, a safe default, or a correct
+          result, following the matching postmortem's fix). It must FAIL on the
+          current buggy code and PASS after the fix is applied.
+        - Never write a test that expects the buggy behaviour (for example,
+          expecting a crash or a raw library exception to propagate).
+        - Each bug-proving test must fail for the right reason: its failure
+          message must show the bug itself, not a setup problem (import error,
+          wrong mock target, missing fixture). If a test fails for the wrong
+          reason, fix the test and rerun before continuing.
+        - Safety tests that check normal/happy-path behaviour are allowed and
+          encouraged. They must PASS both before and after the fix is applied.
+        - Label the two kinds clearly using the test framework's naming or
+          tagging conventions: bug-proving tests must have names starting with
+          test_bug_ (or the idiomatic equivalent for the detected framework),
+          and safety tests must have names starting with test_safety_, so that
+          counts for each kind can be read directly from the test output.
+        - Run all tests using the exact test command detected in Step 0 before
+          the approval checkpoint. Every bug-proving test must be FAILING and
+          every safety test must be PASSING. If that is not the case, fix the
+          tests and rerun until it is.
+        - Do not rewrite tests after the approval checkpoint, except to correct
+          a genuine test mistake; report any such correction explicitly.
 
 
       STEP 4 - BUILD GUARDRAILS
@@ -117,12 +141,20 @@ customModes:
           through the actual network-client library -- it must never flag
           unrelated calls that merely share a name with the pattern.
         - Skip any call site where the code already applies the correct fix
-          described in the postmortem for that pattern.
+          described in the postmortem for that pattern. Never skip files or
+          functions using a hard-coded list of names; the only valid reason to
+          skip a location is that the code at that location already contains the
+          correct fix. This means that if a fix is ever removed -- including at
+          the original incident location -- the guardrail will flag it again.
         - Only scan the source folder the user chose in BEFORE STEP 0. Always
           skip dependency and build output directories (e.g. venv, .venv, env,
           __pycache__, site-packages, node_modules, target, dist, build, .gradle,
           vendor) and any folder or file whose name contains "mock", "fake",
           "stub", or "test" (case-insensitive).
+        - Write the guardrail script compatible with the language version
+          detected in Step 0 (for example, the Python version of the project's
+          virtual environment) and run it using the project's own runtime, not
+          any globally installed version.
         - Exit with code 0 when no issues are found; exit with a non-zero code
           when one or more issues are found.
 
@@ -142,9 +174,11 @@ customModes:
 
       CHECKPOINT - HUMAN APPROVAL (MANDATORY STOP)
       Stop here. Show a summary table of every confirmed bug and the proposed
-      fix for each one. Do NOT change any application code until the user
-      replies with the single word "approve". If the user replies with anything
-      else, re-show the table and wait again.
+      fix for each one. Include the test-run counts copied directly from the
+      actual test output: "X bug-proving tests FAILING, Y safety tests PASSING"
+      before the fix. Do NOT change any application code until the user replies
+      with the single word "approve". If the user replies with anything else,
+      re-show the table and wait again.
 
 
       STEP 5 - FIX AND VERIFY
@@ -170,17 +204,22 @@ customModes:
           function/method, fixed (yes/no), test name(s)
         - Suspicious-looking locations that were checked and judged safe, with
           reasons
-        - Totals: bugs found, tests written, tests failing before fix, tests
-          passing after fix, guardrail issues before fixes (exact script count),
-          guardrail issues after fixes (exact script count), guardrail exit code
-          before and after
+        - Totals: bugs found, tests written, bug-proving tests FAILING before
+          fix (copied from actual test output), safety tests PASSING before fix
+          (copied from actual test output), bug-proving tests PASSING after fix
+          (copied from actual test output), safety tests PASSING after fix
+          (copied from actual test output), guardrail issues before fixes (exact
+          script count), guardrail issues after fixes (exact script count),
+          guardrail exit code before and after
         - Time taken for each step and in total (based on recorded timestamps)
         - A "What would have happened" section describing the likely production
           impact of each bug based on the matching postmortem
         - A "CI" section (see CI GENERATION RULE below)
-      HONEST REPORTING RULE: the issue counts in the report must be copied
-      directly from the guardrail script's actual printed output -- never
-      adjusted, inferred, or filtered manually.
+      HONEST REPORTING RULE: all counts in the report -- guardrail issue counts
+      and test counts -- must be copied directly from the actual printed output
+      of the guardrail script and test runner respectively. Never adjust, infer,
+      filter, or manually "confirm" any number. Never describe failing tests as
+      passing, or the reverse.
       Finally print a short summary in chat with all the key numbers.
 
       CI GENERATION RULE (run as part of Step 6, before writing the report):
