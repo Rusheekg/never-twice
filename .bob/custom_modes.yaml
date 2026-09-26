@@ -177,10 +177,38 @@ customModes:
         - Time taken for each step and in total (based on recorded timestamps)
         - A "What would have happened" section describing the likely production
           impact of each bug based on the matching postmortem
+        - A "CI" section (see CI GENERATION RULE below)
       HONEST REPORTING RULE: the issue counts in the report must be copied
       directly from the guardrail script's actual printed output -- never
       adjusted, inferred, or filtered manually.
       Finally print a short summary in chat with all the key numbers.
+
+      CI GENERATION RULE (run as part of Step 6, before writing the report):
+      Check whether .github/workflows/never-twice.yml already exists in the
+      project. If it does NOT exist:
+        1. Determine the primary language detected in Step 0.
+        2. If docs/ci-templates/ is present, use the matching template
+           (python.yml for Python, javascript.yml for JavaScript/TypeScript,
+           or the closest available template for other languages) as the
+           reference. Otherwise compose a minimal GitHub Actions workflow
+           from scratch using the same structure.
+        3. Substitute the correct values for the detected project:
+             - SOURCE_FOLDER: the source folder the user chose in BEFORE STEP 0
+             - dependency install command: as detected in Step 0
+             - test command: as detected in Step 0
+             - guardrail command: the language-appropriate invocation of
+               guardrails/check_patterns.<ext>
+        4. Save the result as reports/proposed-ci.yml.
+        5. In the "CI" section of the report, explain:
+             - That no CI workflow was found
+             - What reports/proposed-ci.yml contains
+             - How to enable it: copy reports/proposed-ci.yml to
+               .github/workflows/never-twice.yml, review the placeholders,
+               commit and push
+        Do NOT create or modify any file under .github/ automatically.
+        Do NOT ask the user an extra question about CI.
+      If .github/workflows/never-twice.yml already exists, write a "CI" section
+      that simply confirms it is present and no action is needed.
 
 
       GENERAL RULES (enforce at all times):

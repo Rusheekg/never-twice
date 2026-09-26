@@ -1,0 +1,76 @@
+# ============================================================
+# Never Twice — CI template for Python projects
+#
+# USAGE
+#   Copy this file to .github/workflows/never-twice.yml in
+#   your repository, then replace every value marked with
+#   "# REPLACE" with the correct value for your project.
+# ============================================================
+
+name: Never Twice
+
+on:
+  push:
+    branches:
+      - "**"           # REPLACE: limit to specific branches if needed (e.g. [main, develop])
+  pull_request:
+    branches:
+      - "**"           # REPLACE: limit to specific branches if needed
+
+jobs:
+  never-twice:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version:
+          - "3.11"     # REPLACE: list the Python versions your project targets
+          - "3.12"
+
+    steps:
+      # --------------------------------------------------------
+      # 1. Check out the repository
+      # --------------------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------
+      # 2. Set up the requested Python version
+      # --------------------------------------------------------
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # --------------------------------------------------------
+      # 3. Install project dependencies
+      #    REPLACE the path below with your requirements file.
+      #    Common alternatives:
+      #      pip install -r requirements.txt
+      #      pip install -r requirements-dev.txt
+      #      pip install -e ".[dev]"
+      # --------------------------------------------------------
+      - name: Install dependencies
+        run: pip install -r requirements.txt   # REPLACE: path to your requirements file
+
+      # --------------------------------------------------------
+      # 4. Run the test suite
+      #    REPLACE the command below with your test command.
+      #    Common alternatives:
+      #      pytest
+      #      pytest tests/
+      #      python -m pytest --tb=short
+      #    The step fails (non-zero exit) automatically if any
+      #    test fails.
+      # --------------------------------------------------------
+      - name: Run tests
+        run: pytest                            # REPLACE: your test command
+
+      # --------------------------------------------------------
+      # 5. Run the Never Twice guardrail
+      #    REPLACE <SOURCE_FOLDER> with the folder that contains
+      #    your application source files (e.g. app, src, lib).
+      #    The step fails if the guardrail finds any issues.
+      # --------------------------------------------------------
+      - name: Run guardrail pattern check
+        run: python guardrails/check_patterns.py <SOURCE_FOLDER>   # REPLACE: source folder
