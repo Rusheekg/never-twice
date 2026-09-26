@@ -1,3 +1,284 @@
+# Rewrite README.md in the project root as a professional hackathon README for "Never Twice". Do not change any other files.
+
+Before writing, read: reports/PREVENTION_REPORT.md, reports/findings.md, docs/HOW_TO_USE.md, .bob/custom_modes.yaml, .github/workflows/never-twice.yml, SECURITY.MD, .env.example, .bobignore, and the list of files in bob_sessions/. Use only numbers stated below or in those files. Do not invent any numbers or features.
+
+Structure the README in this order:
+
+1. Title "Never Twice" and the pitch: "Every team writes postmortems. Nobody uses them. Never Twice turns every past incident into automatic protection against the next one."
+   Add a line: "Demo video: [DEMO VIDEO LINK]" and "Team: [TEAM MEMBERS]" as placeholders.
+
+2. Challenge fit (short): built for the IBM Bob 2.0 hackathon; improves the debugging and application maintenance workflow; uses Agent mode, parallel subagents, document understanding, and a custom Bob mode.
+
+3. Results, as a before/after table:
+   - Manual review: 26 minutes, 1 of 7 hidden bugs found, 6 missed, 4 of 5 reported issues pointed to code the postmortems had already fixed, 0 tests, 0 fixes.
+   - Never Twice: about 6 minutes of automated work, 7 of 7 hidden bugs found, 0 missed, 0 false alarms on decoy code, 13 tests failing before and passing after, 7 fixes, guardrail 7 issues before and 0 after, the user typed only two messages.
+   Below the table: "Manual baseline: one teammate, no AI tools, same postmortems and code, who had briefly seen the code in an earlier attempt. Small-sample test, shown for illustration."
+
+4. The problem: why repeat incidents happen (postmortems are written, but the audit for similar code is rarely done) and what they cost, using the incidents in the postmortems folder as examples.
+
+5. How it works: a Mermaid flowchart (```mermaid) of the steps: learn from postmortems → hunt in parallel (one subagent per pattern) → prove with failing tests → build guardrails → human approval checkpoint → fix and verify → prevention report. Then one sentence per step.
+
+6. IBM Bob 2.0 features used and exactly where: custom mode (.bob/custom_modes.yaml), Agent mode, parallel subagents, document understanding (reading postmortems), human-in-the-loop approval.
+
+7. Self-validating guardrails: the mode requires the guardrail to flag exactly the confirmed bugs before fixes and zero after, with no manual filtering. Explain that this rule was added after catching a guardrail with 57 false positives during testing, and link to the Guardrail Correction section in reports/PREVENTION_REPORT.md.
+
+8. Quick start:
+   - Requirements: Python 3.9+, Git, IBM Bob. No API keys or credentials needed.
+   - Setup commands for Windows (PowerShell) and Mac/Linux: create venv, activate, pip install -r app/requirements.txt.
+   - Windows tip: if activation fails with "running scripts is disabled", run: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   - Run tests: python -m pytest tests -v
+   - Run guardrail: python guardrails/check_patterns.py app
+   - Run the mode: open the folder in Bob, select "Never Twice" in the mode picker, type "Run the full workflow.", answer the folder questions, review the approval table, type "approve".
+
+9. Reproduce the demo from the original buggy code (Windows PowerShell):
+   git checkout -b demo-run buggy-baseline
+   git checkout main -- .bob .github docs
+   Remove-Item -Recurse -Force tests, .pytest_cache, app\__pycache__ -ErrorAction SilentlyContinue
+   Then run the Never Twice mode as above.
+
+10. Use it on your own project: short steps, linking to docs/HOW_TO_USE.md and docs/POSTMORTEM_TEMPLATE.md.
+
+11. CI guardrail: what .github/workflows/never-twice.yml does (runs tests and guardrail on every push and pull request, on Python 3.9 and 3.12, and fails on any issue).
+
+12. Bob session reports: bob_sessions/ contains the exported Bob task history for the whole project. List what the sessions built: sample app and postmortems, first run and reusable mode, custom-mode demo run, guardrail validation rules, .gitignore setup, report correction.
+
+13. Project structure: a short folder tree with one line per item: .bob, .github, app, bob_sessions, docs, guardrails, postmortems, reports, tests, .bobignore, .env.example, SECURITY.MD.
+
+14. Security (keep the IBM template's guidance):
+   - This project follows the IBM hackathon template. No credentials are used.
+   - Security features: .gitignore (prevents committing credentials and session files), .bobignore (prevents Bob from logging credential patterns), .env.example (template for environment variables; not needed for this project).
+   - Before every commit checklist: reviewed git diff for sensitive data; no hardcoded API keys or passwords; .env not staged; no files with "credential" or "secret" in the name; environment variables used for any credentials.
+   - Link to SECURITY.MD.
+
+15. Future improvements (3–4 bullets): testing on real-world postmortems and larger codebases; support for more languages; pull-request comments that link a reintroduced pattern to its postmortem; a dashboard of incidents and prevented bugs.
+
+Keep it clear and scannable, readable in under 3 minutes. When done, confirm that README.md is the only file you changed.
+
+---
+
+**Status:** active  **Date:** 2026-09-26
+
+---
+
+### 👤 User
+
+Rewrite README.md in the project root as a professional hackathon README for "Never Twice". Do not change any other files.
+
+Before writing, read: reports/PREVENTION_REPORT.md, reports/findings.md, docs/HOW_TO_USE.md, .bob/custom_modes.yaml, .github/workflows/never-twice.yml, SECURITY.MD, .env.example, .bobignore, and the list of files in bob_sessions/. Use only numbers stated below or in those files. Do not invent any numbers or features.
+
+Structure the README in this order:
+
+1. Title "Never Twice" and the pitch: "Every team writes postmortems. Nobody uses them. Never Twice turns every past incident into automatic protection against the next one."
+   Add a line: "Demo video: [DEMO VIDEO LINK]" and "Team: [TEAM MEMBERS]" as placeholders.
+
+2. Challenge fit (short): built for the IBM Bob 2.0 hackathon; improves the debugging and application maintenance workflow; uses Agent mode, parallel subagents, document understanding, and a custom Bob mode.
+
+3. Results, as a before/after table:
+   - Manual review: 26 minutes, 1 of 7 hidden bugs found, 6 missed, 4 of 5 reported issues pointed to code the postmortems had already fixed, 0 tests, 0 fixes.
+   - Never Twice: about 6 minutes of automated work, 7 of 7 hidden bugs found, 0 missed, 0 false alarms on decoy code, 13 tests failing before and passing after, 7 fixes, guardrail 7 issues before and 0 after, the user typed only two messages.
+   Below the table: "Manual baseline: one teammate, no AI tools, same postmortems and code, who had briefly seen the code in an earlier attempt. Small-sample test, shown for illustration."
+
+4. The problem: why repeat incidents happen (postmortems are written, but the audit for similar code is rarely done) and what they cost, using the incidents in the postmortems folder as examples.
+
+5. How it works: a Mermaid flowchart (```mermaid) of the steps: learn from postmortems → hunt in parallel (one subagent per pattern) → prove with failing tests → build guardrails → human approval checkpoint → fix and verify → prevention report. Then one sentence per step.
+
+6. IBM Bob 2.0 features used and exactly where: custom mode (.bob/custom_modes.yaml), Agent mode, parallel subagents, document understanding (reading postmortems), human-in-the-loop approval.
+
+7. Self-validating guardrails: the mode requires the guardrail to flag exactly the confirmed bugs before fixes and zero after, with no manual filtering. Explain that this rule was added after catching a guardrail with 57 false positives during testing, and link to the Guardrail Correction section in reports/PREVENTION_REPORT.md.
+
+8. Quick start:
+   - Requirements: Python 3.9+, Git, IBM Bob. No API keys or credentials needed.
+   - Setup commands for Windows (PowerShell) and Mac/Linux: create venv, activate, pip install -r app/requirements.txt.
+   - Windows tip: if activation fails with "running scripts is disabled", run: Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+   - Run tests: python -m pytest tests -v
+   - Run guardrail: python guardrails/check_patterns.py app
+   - Run the mode: open the folder in Bob, select "Never Twice" in the mode picker, type "Run the full workflow.", answer the folder questions, review the approval table, type "approve".
+
+9. Reproduce the demo from the original buggy code (Windows PowerShell):
+   git checkout -b demo-run buggy-baseline
+   git checkout main -- .bob .github docs
+   Remove-Item -Recurse -Force tests, .pytest_cache, app\__pycache__ -ErrorAction SilentlyContinue
+   Then run the Never Twice mode as above.
+
+10. Use it on your own project: short steps, linking to docs/HOW_TO_USE.md and docs/POSTMORTEM_TEMPLATE.md.
+
+11. CI guardrail: what .github/workflows/never-twice.yml does (runs tests and guardrail on every push and pull request, on Python 3.9 and 3.12, and fails on any issue).
+
+12. Bob session reports: bob_sessions/ contains the exported Bob task history for the whole project. List what the sessions built: sample app and postmortems, first run and reusable mode, custom-mode demo run, guardrail validation rules, .gitignore setup, report correction.
+
+13. Project structure: a short folder tree with one line per item: .bob, .github, app, bob_sessions, docs, guardrails, postmortems, reports, tests, .bobignore, .env.example, SECURITY.MD.
+
+14. Security (keep the IBM template's guidance):
+   - This project follows the IBM hackathon template. No credentials are used.
+   - Security features: .gitignore (prevents committing credentials and session files), .bobignore (prevents Bob from logging credential patterns), .env.example (template for environment variables; not needed for this project).
+   - Before every commit checklist: reviewed git diff for sensitive data; no hardcoded API keys or passwords; .env not staged; no files with "credential" or "secret" in the name; environment variables used for any credentials.
+   - Link to SECURITY.MD.
+
+15. Future improvements (3–4 bullets): testing on real-world postmortems and larger codebases; support for more languages; pull-request comments that link a reintroduced pattern to its postmortem; a dashboard of incidents and prevented bugs.
+
+Keep it clear and scannable, readable in under 3 minutes. When done, confirm that README.md is the only file you changed.
+
+---
+
+### 🤖 Assistant
+
+> 🔧 called: spawn_subagent
+
+
+
+> 🔧 **spawn_subagent** — explore
+
+### 🤖 Assistant
+
+> 🔧 called: list_files, read_file
+
+Now I have everything I need. Let me also quickly check for the list of actual files in `bob_sessions/` and the `.env.example` content directly, and also verify some key details:
+
+> 🔧 **list_files** — bob_sessions
+
+> 🔧 **read_file** — .env.example
+
+### 🤖 Assistant
+
+> 🔧 called: read_file, read_file
+
+
+
+> 🔧 **read_file** — bob_sessions/bob-tasks-never-twice-2026-09-26.md
+
+> 🔧 **read_file** — reports/PREVENTION_REPORT.md
+
+### 🤖 Assistant
+
+> 🔧 called: write_file
+
+Now I have everything I need. Let me write the README:
+
+> 🔧 **write_file** — README.md
+
+### 🤖 Assistant
+
+> 🔧 called: execute_command
+
+Now let me verify that `README.md` is the only file changed:
+
+> 🔧 **execute_command** — git diff --name-only
+
+### 🤖 Assistant
+
+`README.md` is the only modified file. Here's a summary of what was written and how each section maps to the source files:
+
+---
+
+**What's in the new README and where every fact came from:**
+
+| Section | Source |
+|---|---|
+| Pitch + title | Specified in the prompt |
+| Challenge fit / Bob features | `.bob/custom_modes.yaml` |
+| Results table | `reports/PREVENTION_REPORT.md` (Totals table + Step Durations row showing ~6 min 22 s automated work) |
+| The Problem / postmortem numbers | `reports/PREVENTION_REPORT.md` (What Would Have Happened section — 1,247 requests, 12 complaints, 4 hours, 23 min SEV-1, £6,200) |
+| How It Works flowchart | `.bob/custom_modes.yaml` (the 6-step workflow) |
+| IBM Bob features table | `.bob/custom_modes.yaml` |
+| Self-validating guardrails / 57 false positives | `reports/PREVENTION_REPORT.md` Guardrail Correction section |
+| Quick start commands | `docs/HOW_TO_USE.md` + prompt (Windows tip) |
+| Reproduce demo (PowerShell commands) | Prompt |
+| Use on your own project | `docs/HOW_TO_USE.md` |
+| CI guardrail | `.github/workflows/never-twice.yml` (push/PR trigger, Python 3.9 + 3.12 matrix, pytest + guardrail steps) |
+| Bob session reports | `bob_sessions/bob-tasks-never-twice-2026-09-26.md` (headers/session content) |
+| Project structure | Observed folder layout |
+| Security | `SECURITY.MD` + `.bobignore` contents |
+| Future improvements | Prompt |
+
+---
+
+### 👤 User
+
+Edit only README.md. Make exactly these changes and nothing else:
+
+1. Results table: replace the row "False alarms on decoy code | 4 of 5 reported issues | 0" with two rows:
+   | **False alarms on decoy code** | 0 | 0 |
+   | **Reports pointing to already-fixed code** | 4 of 5 | 0 |
+   Also add a row after the time row: | **Total time incl. human review** | 26 minutes | ~11 minutes |
+
+2. Below the baseline note, add: "Results were verified against an answer key kept outside the repository and outside Bob's context."
+
+3. The Problem section: change "This project's three postmortems" to "This project's three sample postmortems". For PM-001, change "two other endpoints" to "three other places". Replace the last sentence of the section with: "These repeat bugs could have been found the day each postmortem was written, if anyone had searched for the pattern."
+
+4. Mermaid flowchart: replace every "\n" inside node labels with "<br/>".
+
+5. Reproduce the demo: change the branch name in "git checkout -b demo-run buggy-baseline" to "replay-demo". Change "Bob will find all 7 bugs" to "In our runs, Bob found all 7 bugs".
+
+6. CI Guardrail: replace "Any reintroduction of a known bug pattern blocks the PR before review." with "Any pull request that reintroduces a known bug pattern fails this check."
+
+7. Project Structure: change "13 pytest tests (one per confirmed bug)" to "13 pytest tests covering the 7 confirmed bugs".
+
+8. Bob Session Reports: replace "records six sessions in order:" with "records each Bob session used to build this project:". Change the "Report correction" description to "Update of reports/PREVENTION_REPORT.md with the validated guardrail's numbers and the Guardrail Correction section". Add a final row: | README | This README |
+
+When done, list each change you made and confirm README.md is the only file changed.
+
+---
+
+### 🤖 Assistant
+
+> 🔧 called: read_file
+
+
+
+> 🔧 **read_file** — README.md
+
+### 🤖 Assistant
+
+> 🔧 called: apply_diff
+
+
+
+> 🔧 **apply_diff** — README.md
+
+### 🤖 Assistant
+
+> 🔧 called: execute_command
+
+Now verify only README.md was changed:
+
+> 🔧 **execute_command** — git diff --name-only
+
+### 🤖 Assistant
+
+`README.md` is the only file changed. Here's every change made:
+
+1. **Results table — new row after Time row:** Added `| **Total time incl. human review** | 26 minutes | ~11 minutes |`
+
+2. **Results table — False alarms row split into two:**
+   - `| **False alarms on decoy code** | 0 | 0 |`
+   - `| **Reports pointing to already-fixed code** | 4 of 5 | 0 |`
+
+3. **Below the baseline note:** Added `Results were verified against an answer key kept outside the repository and outside Bob's context.`
+
+4. **The Problem — opening line:** `three postmortems` → `three sample postmortems`
+
+5. **The Problem — PM-001:** `two other endpoints` → `three other places`
+
+6. **The Problem — closing sentence:** Replaced `In all three cases, the repeat incidents were preventable the day the original postmortem was written — if anyone had searched for the pattern.` with `These repeat bugs could have been found the day each postmortem was written, if anyone had searched for the pattern.`
+
+7. **Mermaid flowchart:** Replaced `\n` in node B (`Hunt in parallel\none subagent per pattern`) and node E (`Human approval\ncheckpoint`) with `<br/>`
+
+8. **Reproduce the demo — branch name:** `demo-run` → `replay-demo`
+
+9. **Reproduce the demo — result sentence:** `Bob will find all 7 bugs` → `In our runs, Bob found all 7 bugs` (and reworded rest to past tense)
+
+10. **CI Guardrail — closing sentence:** `Any reintroduction of a known bug pattern blocks the PR before review.` → `Any pull request that reintroduces a known bug pattern fails this check.`
+
+11. **Bob Session Reports — intro:** `records six sessions in order:` → `records each Bob session used to build this project:`
+
+12. **Bob Session Reports — Report correction description:** Updated to `Update of reports/PREVENTION_REPORT.md with the validated guardrail's numbers and the Guardrail Correction section`
+
+13. **Bob Session Reports — new final row:** Added `| README | This README |`
+
+14. **Project Structure — tests line:** `13 pytest tests (one per confirmed bug)` → `13 pytest tests covering the 7 confirmed bugs`
+
+===
+
 # Edit only reports/PREVENTION_REPORT.md. Do not change any other file.
 
 1. In the Totals table, replace the three guardrail rows with:
