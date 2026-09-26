@@ -228,3 +228,74 @@ codebase.
 | CI templates | `docs/ci-templates/python.yml`, `docs/ci-templates/javascript.yml` |
 | Prevention report | `reports/PREVENTION_REPORT.md` |
 | Postmortem template | `docs/POSTMORTEM_TEMPLATE.md` |
+
+---
+
+## Install for All Your Projects
+
+By default the Never Twice mode is only available inside this repository
+because its definition lives in `.bob/custom_modes.yaml`. Run the installer
+once and Bob will offer the mode in **every** project you open — no copying
+needed.
+
+### 1 — Install the Python dependency
+
+```bash
+pip install -r scripts/requirements.txt
+```
+
+### 2 — Install the mode globally
+
+```bash
+python scripts/install_never_twice.py
+```
+
+The script will:
+- Locate your global Bob modes file (`~/.bob/settings/custom_modes.yaml` on
+  macOS/Linux; `%USERPROFILE%\.bob\settings\custom_modes.yaml` on Windows).
+- Create the file and any missing parent folders if they do not already exist.
+- If the file exists, create a timestamped backup (e.g.
+  `custom_modes.yaml.bak-20240115T143022`) before making any changes.
+- Add the `never-twice` entry, or replace an existing entry with the same slug
+  — all other modes in the file are left untouched.
+- Read the file back and print a verification result confirming it parses
+  correctly and contains exactly one `never-twice` entry.
+
+> **Note on formatting:** PyYAML normalises whitespace and removes comments
+> when it rewrites the file. Your original is preserved in the timestamped
+> backup.
+
+### 3 — Preview changes without writing (dry run)
+
+```bash
+python scripts/install_never_twice.py --dry-run
+```
+
+Prints the global file path, the backup path that *would* be created, and the
+full YAML that *would* be written — without touching any file.
+
+### 4 — Remove the mode
+
+```bash
+python scripts/install_never_twice.py --uninstall
+```
+
+Removes only the `never-twice` entry, creates a backup first, and verifies the
+result. All other modes are left untouched.
+
+### 5 — Confirm the mode appears in Bob
+
+1. Open **any other folder** in Bob (one that does not have its own
+   `.bob/custom_modes.yaml` with a `never-twice` entry).
+2. Click the **mode picker** in the top-left corner of the chat panel.
+3. **Never Twice** should appear in the list.
+
+If it does not appear, restart Bob (the global modes file is read on startup).
+
+### What happens if a project already has its own Never Twice entry?
+
+If a project has `.bob/custom_modes.yaml` containing a `never-twice` entry,
+**that project-level definition takes precedence** over the global one for that
+project. The global entry is used only when no project-level entry with the
+same slug exists. Running the installer does not affect, overwrite, or conflict
+with any project-level mode.
