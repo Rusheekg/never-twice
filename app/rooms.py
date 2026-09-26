@@ -67,7 +67,9 @@ def get_room(room_id: str):
 def get_room_details(room_id: str) -> dict:
     """Return a detailed view of a room including a formatted description."""
     room = ROOMS.get(room_id)
-    summary = room["description"].strip()
+    if room is None:
+        raise ValueError(f"Room {room_id!r} not found")
+    summary = (room["description"] or "").strip()
     amenity_list = ", ".join(room["amenities"])
     return {
         "id": room_id,

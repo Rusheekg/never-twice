@@ -47,8 +47,13 @@ def process_payment(booking_id: str, user_id: str, amount: float,
         "currency": "USD",
     }
 
-    response = http.post(MOCK_PAYMENT_URL, json=payload)
-    gateway_data = response.json()
+    try:
+        response = http.post(MOCK_PAYMENT_URL, json=payload, timeout=10)
+        gateway_data = response.json()
+    except http.exceptions.Timeout:
+        raise RuntimeError("Payment gateway timed out")
+    except http.exceptions.RequestException as exc:
+        raise RuntimeError(f"Payment gateway unreachable: {exc}")
 
     if response.status_code != 200 or gateway_data.get("status") != "success":
         raise RuntimeError(
