@@ -47,3 +47,6 @@ How we checked that Never Twice actually works — and where it didn't.
 - Both apps are small (under 10 source files). Large codebases are not tested yet.
 
 
+
+## New-developer setup test
+A teammate followed the main README from a fresh clone on a second Windows laptop (Python 3.12): setup, 13/13 tests passing, guardrail clean, global install with `Verification: PASS`, and the Never Twice mode appeared in an unrelated empty project in Bob. Time taken: about 4 minutes.
