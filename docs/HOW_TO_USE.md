@@ -137,6 +137,64 @@ versions in the `matrix.python-version` list in the YAML file.
 
 ---
 
+## CI for Your Language
+
+Never Twice ships two generic CI templates in [`docs/ci-templates/`](ci-templates/)
+that you can adapt for any project. Each template is a complete GitHub Actions
+workflow with **every value a team must adjust clearly marked with a `# REPLACE`
+comment**.
+
+### Available templates
+
+| File | Language / runtime | Installs via | Runs tests with | Runs guardrail with |
+|---|---|---|---|---|
+| [`docs/ci-templates/python.yml`](ci-templates/python.yml) | Python | `pip install -r <requirements file>` | `pytest` | `python guardrails/check_patterns.py <SOURCE_FOLDER>` |
+| [`docs/ci-templates/javascript.yml`](ci-templates/javascript.yml) | JavaScript / Node.js LTS | `npm ci` | `npm test` | `node guardrails/check_patterns.js <SOURCE_FOLDER>` |
+
+Both templates:
+- Trigger on every `push` and `pull_request` to any branch.
+- Use the current major versions of the official actions:
+  `actions/checkout@v4`, `actions/setup-python@v5`, `actions/setup-node@v4`.
+- Fail the workflow automatically if tests return a non-zero exit code **or** if
+  the guardrail script detects any issues (guardrail exits non-zero when issues
+  are found).
+
+### Placeholders to replace
+
+Before committing a template, search for `# REPLACE` and update each one:
+
+| Placeholder | What to set |
+|---|---|
+| `<SOURCE_FOLDER>` | The folder containing your application source files (e.g. `app`, `src`, `lib`) |
+| Requirements file path | Path to your `requirements.txt` or equivalent (Python only) |
+| Test command | Your exact test command (e.g. `pytest tests/`, `npx vitest run`) |
+| Branch filter | The branches you want the workflow to run on (e.g. `[main, develop]`) |
+| Python / Node.js version matrix | The runtime versions your project targets |
+
+### Using the proposed CI file from a Never Twice run
+
+When Never Twice completes a run on a project that has **no existing
+`.github/workflows/never-twice.yml`**, it automatically generates a ready-to-use
+workflow file tailored to the detected language and saves it as
+`reports/proposed-ci.yml`.
+
+To activate it:
+
+1. Review `reports/proposed-ci.yml` — confirm the source folder, dependency
+   install command, test command, and guardrail invocation are correct.
+2. Copy it to `.github/workflows/never-twice.yml`:
+
+   ```bash
+   cp reports/proposed-ci.yml .github/workflows/never-twice.yml
+   ```
+
+3. Commit and push. GitHub Actions picks it up automatically.
+
+Never Twice will **never** create or modify files under `.github/` on its own —
+the copy step is always a deliberate human action.
+
+---
+
 ## Step 5 — Read the Prevention Report
 
 After the workflow finishes, open `reports/PREVENTION_REPORT.md`. It contains:
@@ -165,6 +223,79 @@ codebase.
 | Failing/passing tests | `tests/test_confirmed_bugs.py` |
 | Guardrail script | `guardrails/check_patterns.py` |
 | Code review checklist | `guardrails/REVIEW_CHECKLIST.md` |
-| CI workflow | `.github/workflows/never-twice.yml` |
+| CI workflow (active) | `.github/workflows/never-twice.yml` |
+| CI workflow (proposed) | `reports/proposed-ci.yml` *(generated when no active CI found)* |
+| CI templates | `docs/ci-templates/python.yml`, `docs/ci-templates/javascript.yml` |
 | Prevention report | `reports/PREVENTION_REPORT.md` |
 | Postmortem template | `docs/POSTMORTEM_TEMPLATE.md` |
+
+---
+
+## Install for All Your Projects
+
+By default the Never Twice mode is only available inside this repository
+because its definition lives in `.bob/custom_modes.yaml`. Run the installer
+once and Bob will offer the mode in **every** project you open — no copying
+needed.
+
+### 1 — Install the Python dependency
+
+```bash
+pip install -r scripts/requirements.txt
+```
+
+### 2 — Install the mode globally
+
+```bash
+python scripts/install_never_twice.py
+```
+
+The script will:
+- Locate your global Bob modes file (`~/.bob/settings/custom_modes.yaml` on
+  macOS/Linux; `%USERPROFILE%\.bob\settings\custom_modes.yaml` on Windows).
+- Create the file and any missing parent folders if they do not already exist.
+- If the file exists, create a timestamped backup (e.g.
+  `custom_modes.yaml.bak-20240115T143022`) before making any changes.
+- Add the `never-twice` entry, or replace an existing entry with the same slug
+  — all other modes in the file are left untouched.
+- Read the file back and print a verification result confirming it parses
+  correctly and contains exactly one `never-twice` entry.
+
+> **Note on formatting:** PyYAML normalises whitespace and removes comments
+> when it rewrites the file. Your original is preserved in the timestamped
+> backup.
+
+### 3 — Preview changes without writing (dry run)
+
+```bash
+python scripts/install_never_twice.py --dry-run
+```
+
+Prints the global file path, the backup path that *would* be created, and the
+full YAML that *would* be written — without touching any file.
+
+### 4 — Remove the mode
+
+```bash
+python scripts/install_never_twice.py --uninstall
+```
+
+Removes only the `never-twice` entry, creates a backup first, and verifies the
+result. All other modes are left untouched.
+
+### 5 — Confirm the mode appears in Bob
+
+1. Open **any other folder** in Bob (one that does not have its own
+   `.bob/custom_modes.yaml` with a `never-twice` entry).
+2. Click the **mode picker** in the top-left corner of the chat panel.
+3. **Never Twice** should appear in the list.
+
+If it does not appear, restart Bob (the global modes file is read on startup).
+
+### What happens if a project already has its own Never Twice entry?
+
+If a project has `.bob/custom_modes.yaml` containing a `never-twice` entry,
+**that project-level definition takes precedence** over the global one for that
+project. The global entry is used only when no project-level entry with the
+same slug exists. Running the installer does not affect, overwrite, or conflict
+with any project-level mode.

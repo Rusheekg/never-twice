@@ -1,6 +1,8 @@
-# Never Twice
+﻿# Never Twice
 
 > **Every team writes postmortems. Nobody uses them. Never Twice turns every past incident into automatic protection against the next one.**
+
+Designed for any language — verified on Python and JavaScript.
 
 Demo video: [DEMO VIDEO LINK]  
 Team: Aluvala Sai Shailu Sri, G Rusheek
@@ -39,7 +41,7 @@ Never Twice was built for the **IBM Bob 2.0 hackathon**. It directly improves th
 
 > **Manual baseline:** one teammate, no AI tools, same postmortems and code, who had briefly seen the code in an earlier attempt. Small-sample test, shown for illustration.
 
-Results were verified against an answer key kept outside the repository and outside Bob's context.
+Results were checked against an answer key that was written before the run and kept outside Bob's context. The answer keys are now published in evaluation/.
 
 ---
 
@@ -61,6 +63,7 @@ These repeat bugs could have been found the day each postmortem was written, if 
 
 ```mermaid
 flowchart TD
+    A0[🔎 Detect language, test framework & CI] --> A
     A[📄 Read postmortems] --> B[🔍 Hunt in parallel<br/>one subagent per pattern]
     B --> C[🧪 Prove with failing tests]
     C --> D[🛡️ Build guardrails]
@@ -69,12 +72,13 @@ flowchart TD
     F --> G[📊 Prevention report]
 ```
 
+0. **Detect project context** — Never Twice first detects the project's language, test framework, and existing CI before hunting. This determines which guardrail template, test runner commands, and CI template to use.
 1. **Learn from postmortems** — Bob reads every file in `postmortems/` and extracts a generalised bug pattern for each incident, saved to `reports/patterns.md`.
 2. **Hunt in parallel** — one subagent per pattern fans out across the codebase simultaneously; results are merged into `reports/findings.md` with a binary verdict (confirmed bug or safe) for every function examined.
-3. **Prove with failing tests** — for each confirmed bug Bob writes a pytest test that fails on the unfixed code, confirming the bug is real and testable.
-4. **Build guardrails** — an AST-based static analyser (`guardrails/check_patterns.py`) is created that flags the exact patterns, plus a PR review checklist.
+3. **Prove with failing tests** — for each confirmed bug Bob writes a test in the project's own test framework (pytest for Python, Jest for JavaScript) that fails on the unfixed code, confirming the bug is real and testable.
+4. **Build guardrails** — an AST-based static analyser in the project's language (`guardrails/check_patterns.py` for Python, `guardrails/check_patterns.js` for JavaScript) is created that flags the exact patterns, plus a PR review checklist.
 5. **Human approval checkpoint** — Bob stops and presents the full findings table; no code is touched until the user types "approve".
-6. **Fix and verify** — fixes are applied, all 13 tests are rerun (must all pass), and the guardrail is rerun (must exit 0).
+6. **Fix and verify** — fixes are applied, all tests are rerun (must all pass), and the guardrail is rerun (must exit 0).
 7. **Prevention report** — `reports/PREVENTION_REPORT.md` records every metric, every safe location examined, and the projected impact of each bug if it had shipped.
 
 ---
@@ -83,9 +87,9 @@ flowchart TD
 
 | Feature | Where it is used |
 |---|---|
-| **Custom Bob mode** | `.bob/custom_modes.yaml` — defines the `never-twice` slug, the six-step workflow, and the guardrail validation rules |
+| **Custom Bob mode** | `.bob/custom_modes.yaml` — defines the `never-twice` slug, the full workflow (Step 0 to Step 7), and the guardrail validation rules |
 | **Agent mode** | All code reading, test writing, fix application, and report generation run in Agent mode |
-| **Parallel subagents** | Step 2: three `spawn_subagent` calls run concurrently, one per bug pattern, each searching all Python files independently |
+| **Parallel subagents** | Step 2: three `spawn_subagent` calls run concurrently, one per bug pattern, each searching all source files independently |
 | **Document understanding** | Step 1: Bob reads `.md` postmortem files and extracts structured patterns — no manual copy-paste |
 | **Human-in-the-loop approval** | Step 5: a mandatory checkpoint between "finding bugs" and "changing code"; the user reviews the findings table and types "approve" before any file is modified |
 
@@ -183,6 +187,63 @@ Full instructions, including how to adapt the guardrail and CI workflow for your
 
 ---
 
+## Use Never Twice in Any Project
+
+To make the Never Twice mode available globally (in every project you open in Bob, not just this repository):
+
+**1. Install the dependency**
+
+```bash
+pip install -r scripts/requirements.txt
+```
+
+This installs PyYAML, which the installer script requires.
+
+**2. Run the installer**
+
+```bash
+python scripts/install_never_twice.py
+```
+
+The script writes the Never Twice mode definition into Bob's global custom modes file (`~/.bob/settings/custom_modes.yaml`). It backs up the existing file before making any changes and verifies the result after writing.
+
+**Options**
+
+| Flag | What it does |
+|---|---|
+| *(no flags)* | Install or update the Never Twice mode in the global file |
+| `--dry-run` | Preview exactly what would change — no files are written |
+| `--uninstall` | Remove the Never Twice mode from the global file (creates a backup first) |
+| `--dry-run --uninstall` | Preview the uninstall without writing anything |
+
+**3. Open any project in Bob and choose the Never Twice mode**
+
+Once installed globally, the **Never Twice** mode appears in the mode picker for every project. A project that already has its own `.bob/custom_modes.yaml` with a `never-twice` entry will continue to use that project-level definition; the global entry acts as the fallback for projects that do not have one.
+
+---
+
+## CI Templates
+
+[`docs/ci-templates/python.yml`](docs/ci-templates/python.yml) and [`docs/ci-templates/javascript.yml`](docs/ci-templates/javascript.yml) are ready-to-use GitHub Actions workflows for Python and JavaScript projects respectively. Copy the appropriate file to `.github/workflows/` in your own repository.
+
+If a project has no existing CI when Never Twice runs, the mode writes `reports/proposed-ci.yml` for the developer to review and adopt. The mode does not add it to .github/workflows itself; a developer reviews it and copies it in.
+
+---
+
+## Evaluation
+
+Two independent benchmarks were run to validate the workflow. Full methodology, answer keys, and session logs are in [`evaluation/README.md`](evaluation/README.md).
+
+| | Benchmark 1 | Benchmark 2 |
+|---|---|---|
+| **App** | Hotel booking (Python) | Online shop (JavaScript) |
+| **Built by** | Same team | Teammate, blind |
+| **Hidden bugs found** | 7 / 7 | 6 / 6 flagged, 5 / 6 proven by failing test |
+| **False alarms on decoys** | – | 0 / 3 |
+| **Extra bugs the answer key missed** | – | 1 |
+
+---
+
 ## CI Guardrail
 
 [`.github/workflows/never-twice.yml`](.github/workflows/never-twice.yml) runs on every push and every pull request across all branches. It:
@@ -191,43 +252,42 @@ Full instructions, including how to adapt the guardrail and CI workflow for your
 - Runs `pytest tests/ -v --tb=short` — fails the workflow on any test failure.
 - Runs `python guardrails/check_patterns.py app/` — fails the workflow if any pattern is found (exit code 1).
 
-Any pull request that reintroduces a known bug pattern fails this check.
+Any pull request that reintroduces one of these three bug patterns in app/ fails this check.
 
 ---
 
 ## Bob Session Reports
 
-`bob_sessions/` contains the exported Bob task history for the entire project.
+`bob_sessions/` contains the exported Bob task history for the main build, both regression checks and both benchmark runs.
 
-**`bob-tasks-never-twice-2026-09-26.md`** records each Bob session used to build this project:
-
-| Session | What it built |
+| Session file | What it covers |
 |---|---|
-| Sample app and postmortems | The hotel-booking Flask app and the three incident postmortems (PM-001, PM-002, PM-003) |
-| First run and reusable mode | The initial full workflow run and the first version of the custom mode definition |
-| Custom-mode demo run | End-to-end execution of the packaged Never Twice mode on the buggy baseline |
-| Guardrail validation rules | Addition of the exact-match validation rules to the mode after the 57-false-positive incident |
-| `.gitignore` setup | Credential and artefact exclusions |
-| Report correction | Update of `reports/PREVENTION_REPORT.md` with the validated guardrail's numbers and the Guardrail Correction section |
-| README | This README |
+| [`bob-tasks-never-twice-2026-09-26.md`](bob_sessions/bob-tasks-never-twice-2026-09-26.md) | Full build history: sample app, postmortems, first run, custom mode, guardrail validation, README |
+| [`regression-check-python.md`](bob_sessions/regression-check-python.md) | First regression check on the Python app — failed our review and led to new mode rules |
+| [`regression-check-2-python.md`](bob_sessions/regression-check-2-python.md) | Second regression check after the rule fixes — passed |
+| [`benchmark-js-build.md`](bob_sessions/benchmark-js-build.md) | Building the JavaScript online shop benchmark app |
+| [`benchmark-js-run.md`](bob_sessions/benchmark-js-run.md) | Running Never Twice on the JavaScript benchmark (Benchmark 2) |
 
 ---
 
 ## Project Structure
 
 ```
-.bob/              Custom mode definition (never-twice)
-.github/           CI workflow (never-twice.yml)
-app/               Sample Flask hotel-booking application
-bob_sessions/      Exported Bob task history for the whole project
-docs/              HOW_TO_USE.md, POSTMORTEM_TEMPLATE.md
-guardrails/        AST-based pattern checker + PR review checklist
-postmortems/       Three incident postmortems (PM-001, PM-002, PM-003)
-reports/           findings.md, patterns.md, PREVENTION_REPORT.md
-tests/             13 pytest tests covering the 7 confirmed bugs
-.bobignore         Prevents Bob from logging credential patterns
-.env.example       Environment variable template (no credentials needed here)
-SECURITY.MD        IBM hackathon security guidance
+.bob/                   Custom mode definition (never-twice)
+.github/                CI workflow (never-twice.yml)
+app/                    Sample Flask hotel-booking application
+bob_sessions/           Exported Bob sessions (build, regression checks, benchmarks)
+docs/                   HOW_TO_USE.md, POSTMORTEM_TEMPLATE.md
+docs/ci-templates/      Ready-to-use CI templates (python.yml, javascript.yml)
+evaluation/             Benchmark results, answer keys, and methodology
+guardrails/             AST-based pattern checker + PR review checklist
+postmortems/            Three incident postmortems (PM-001, PM-002, PM-003)
+reports/                findings.md, patterns.md, PREVENTION_REPORT.md
+scripts/                install_never_twice.py + requirements.txt
+tests/                  13 pytest tests covering the 7 confirmed bugs
+.bobignore              Prevents Bob from logging credential patterns
+.env.example            Environment variable template (no credentials needed here)
+SECURITY.MD             IBM hackathon security guidance
 ```
 
 ---
@@ -256,9 +316,18 @@ See [`SECURITY.MD`](SECURITY.MD) for the full IBM hackathon security guidance.
 
 ---
 
-## Future Improvements
+## Limitations and Future Work
 
-- **Real-world postmortems and larger codebases** — test and tune the pattern-extraction and search steps on production incident histories and multi-thousand-file repositories.
-- **More language support** — extend beyond Python to JavaScript/TypeScript, Java, and Go, where the same classes of bugs (missing null checks, unguarded HTTP calls, timezone errors) are equally common.
-- **Pull-request comments linked to postmortems** — when the guardrail flags a reintroduced pattern in a PR, post a comment that links directly to the postmortem that first recorded it, giving the reviewer full context.
-- **Incident and prevention dashboard** — a summary view of all postmortems ingested, patterns extracted, bugs found and fixed, and guardrail hits over time.
+### Limitations
+
+- **Verified languages:** only Python and JavaScript have been tested end-to-end. The workflow may run on other languages but correctness has not been verified.
+- **Scale:** both benchmarks used small applications. Behaviour on large, multi-thousand-file codebases is unknown.
+- **Human approval is required:** the checkpoint before any code change is mandatory and cannot be skipped. Never Twice is not a fully automated pipeline.
+- **Blind-run disclosure:** in Benchmark 2, the runner accidentally saw 2 bug locations before the run began. This is disclosed in [`evaluation/benchmark-2-shop-javascript/RESULTS.md`](evaluation/benchmark-2-shop-javascript/RESULTS.md) and reflected in the results.
+
+### Future Work
+
+- **More languages** — Java and Go are the next targets; the same bug classes (null checks, unguarded HTTP calls, timezone errors) also occur there.
+- **Larger codebases** — tune pattern extraction and parallel search for production-scale repositories.
+- **Editor integration** — surface Never Twice findings inline in the editor as the developer writes, without needing to run the full workflow manually.
+

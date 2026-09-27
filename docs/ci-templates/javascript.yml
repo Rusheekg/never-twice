@@ -1,0 +1,75 @@
+# ============================================================
+# Never Twice — CI template for JavaScript / Node.js projects
+#
+# USAGE
+#   Copy this file to .github/workflows/never-twice.yml in
+#   your repository, then replace every value marked with
+#   "# REPLACE" with the correct value for your project.
+# ============================================================
+
+name: Never Twice
+
+on:
+  push:
+    branches:
+      - "**"           # REPLACE: limit to specific branches if needed (e.g. [main, develop])
+  pull_request:
+    branches:
+      - "**"           # REPLACE: limit to specific branches if needed
+
+jobs:
+  never-twice:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version:
+          - "lts/*"    # REPLACE: pin to a specific LTS version if needed (e.g. "20", "18")
+
+    steps:
+      # --------------------------------------------------------
+      # 1. Check out the repository
+      # --------------------------------------------------------
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      # --------------------------------------------------------
+      # 2. Set up the requested Node.js version
+      # --------------------------------------------------------
+      - name: Set up Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"   # REPLACE: use "yarn" or remove entirely if not using npm
+
+      # --------------------------------------------------------
+      # 3. Install project dependencies
+      #    "npm ci" installs exactly what is in package-lock.json.
+      #    REPLACE with your install command if needed:
+      #      yarn install --frozen-lockfile
+      #      pnpm install --frozen-lockfile
+      # --------------------------------------------------------
+      - name: Install dependencies
+        run: npm ci                            # REPLACE: your install command
+
+      # --------------------------------------------------------
+      # 4. Run the test suite
+      #    REPLACE the command below with your test command.
+      #    Common alternatives:
+      #      npm test
+      #      npx jest
+      #      npx vitest run
+      #    The step fails (non-zero exit) automatically if any
+      #    test fails.
+      # --------------------------------------------------------
+      - name: Run tests
+        run: npm test                          # REPLACE: your test command
+
+      # --------------------------------------------------------
+      # 5. Run the Never Twice guardrail
+      #    REPLACE <SOURCE_FOLDER> with the folder that contains
+      #    your application source files (e.g. src, lib, app).
+      #    The step fails if the guardrail finds any issues.
+      # --------------------------------------------------------
+      - name: Run guardrail pattern check
+        run: node guardrails/check_patterns.js <SOURCE_FOLDER>   # REPLACE: source folder
