@@ -4,7 +4,7 @@
 
 Designed for any language — verified on Python and JavaScript.
 
-Demo video: [DEMO VIDEO LINK]  
+Demo video: https://github.com/user-attachments/assets/34faa3f7-dbc7-4327-a295-00f3f58775b1  
 Team: Aluvala Sai Shailu Sri, G Rusheek
 
 ---
